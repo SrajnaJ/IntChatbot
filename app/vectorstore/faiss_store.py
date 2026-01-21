@@ -1,5 +1,3 @@
-# app/vectorstore/faiss_store.py
-
 import faiss
 import numpy as np
 import json
