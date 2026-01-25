@@ -20,34 +20,33 @@ class QAService:
         results = self.store.search(query_embedding, top_k=top_k)
 
         safe_chunks = []
+        restricted_info_found = False
 
         for r in results:
             text = r["text"]
 
             if contains_blocked_info(text):
-                return {
-                    "answer": "This information is restricted and cannot be shared.",
-                    "sources": []
-                }
+                restricted_info_found = True
+                continue  # Skip this chunk but process others
 
             safe_chunks.append(redact_text(text))
 
-        # if not results:
-        #     return {
-        #         "answer": "I don't have that information in the provided documents.",
-        #         "sources": []
-        #     }
+        if not safe_chunks:
+            return {
+                "answer": "This information is restricted and cannot be shared."
+                if restricted_info_found
+                else "I don't have that information in the provided documents.",
+                "sources": []
+            }
 
         prompt = build_prompt(question, safe_chunks)
         answer = call_llm(prompt)
 
-        sources = [
-            {
-                "document": r.get("source"),
-                "chunk_id": r.get("chunk_id")
-            }
-            for r in results
-        ]
+        unique_sources = sorted(
+            {r.get("source") for r in results if r.get("source")}
+        )
+
+        sources = [{"document": source} for source in unique_sources]  # Ensure each source is a dictionary
 
         return {
             "answer": answer,

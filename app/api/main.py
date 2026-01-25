@@ -16,8 +16,6 @@ class QuestionRequest(BaseModel):
 
 class Source(BaseModel):
     document: Optional[str]
-    chunk_id: Optional[int]
-
 
 class AnswerResponse(BaseModel):
     answer: str
